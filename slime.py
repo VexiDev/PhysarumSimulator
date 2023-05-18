@@ -75,8 +75,8 @@ while running:
     # Use pygame.surfarray to draw the trails
     trail_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
     trail_rgb = np.repeat(trail_data[:, :, np.newaxis], 3, axis=2)
-    cone_rgb = np.repeat(50*cone_data[:, :, np.newaxis], 3, axis=2)
     if DEBUG == True:
+        cone_rgb = np.repeat(50*cone_data[:, :, np.newaxis], 3, axis=2)
         trail_rgb += cone_rgb
     pygame.surfarray.blit_array(trail_surface, trail_rgb)
     screen.blit(trail_surface, (0, 0))
@@ -91,18 +91,18 @@ while running:
     for idx,particle in enumerate(particles):
         # Draw debug lines
         
-        # Calculate the points for the cone
-        direction = math.atan2(particle.dy, particle.dx)
-        left_angle = direction - math.pi / 6  # 30 degrees to the left
-        right_angle = direction + math.pi / 6  # 30 degrees to the right
-
-        # Calculate the points of the lines
-        left_line_start = (int(particle.x), int(particle.y))
-        left_line_end = (int(particle.x + 20 * math.cos(left_angle)), int(particle.y + 20 * math.sin(left_angle)))
-        right_line_start = (int(particle.x), int(particle.y))
-        right_line_end = (int(particle.x + 20 * math.cos(right_angle)), int(particle.y + 20 * math.sin(right_angle)))
-
         if DEBUG == True:
+            # Calculate the points for the cone
+            direction = math.atan2(particle.dy, particle.dx)
+            left_angle = direction - math.pi / 6  # 30 degrees to the left
+            right_angle = direction + math.pi / 6  # 30 degrees to the right
+
+            # Calculate the points of the lines
+            left_line_start = (int(particle.x), int(particle.y))
+            left_line_end = (int(particle.x + 20 * math.cos(left_angle)), int(particle.y + 20 * math.sin(left_angle)))
+            right_line_start = (int(particle.x), int(particle.y))
+            right_line_end = (int(particle.x + 20 * math.cos(right_angle)), int(particle.y + 20 * math.sin(right_angle)))
+
             # Draw the cone lines
             pygame.draw.line(screen, (0, 0, 255), left_line_start, left_line_end, 1)
             pygame.draw.line(screen, (0, 0, 255), right_line_start, right_line_end, 1)
