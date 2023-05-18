@@ -27,10 +27,14 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 
+px = random.randint(10, SCREEN_WIDTH - 10)
+py = random.randint(10, SCREEN_HEIGHT - 10)
+# # # print("Particle Pos:", px, py)
+
 particles = [
     Particle(
-        random.uniform(10, SCREEN_WIDTH - 10),
-        random.uniform(10, SCREEN_HEIGHT - 10),
+        random.randint(10, SCREEN_WIDTH - 10),
+        random.randint(10, SCREEN_HEIGHT -10),
         TRAIL_MAX_FRAMES
     ) for _ in range(PARTICLE_COUNT)
 ]
@@ -38,32 +42,20 @@ particles = [
 
 trail_data = np.zeros((SCREEN_WIDTH, SCREEN_HEIGHT), dtype=np.float32)
 
-# quadtree = Quadtree((SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, SCREEN_HEIGHT/2), 4)
-
-#add an active particles list here that stores all the particles that are currently active so that we can update their past positions
-
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    
 
-    new_trails = []
+    cone_data = np.zeros((SCREEN_WIDTH, SCREEN_HEIGHT), dtype=np.float32)
+
     for particle in particles:
-        # Update the particle's position
-        past_positions = particle.update(trail_data)
-            
-        # Store the particle's past positions to be added to the trail data later
-        for i in range(particle.trail_length):
-            y, x = map(int, particle.past_positions[particle.trail_length - 1 - i])
-            if 0 <= x < SCREEN_WIDTH and 0 <= y < SCREEN_HEIGHT:
-                new_trails.append((y, x, TRAIL_MAX_FRAMES - i))
 
-    # Update the trail data with the new trails
-    for y, x, value in new_trails:
-        trail_data[y, x] = value
+        trail_data,conem = particle.update(trail_data)
 
+        cone_data += conem
+        
 
     # reduce the trail over time
     trail_data = np.maximum(trail_data - 1, 0)
@@ -73,14 +65,20 @@ while running:
     # Use pygame.surfarray to draw the trails
     trail_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
     trail_rgb = np.repeat(trail_data[:, :, np.newaxis], 3, axis=2)
+    cone_rgb = np.repeat(50*cone_data[:, :, np.newaxis], 3, axis=2)
+    trail_rgb += cone_rgb
     pygame.surfarray.blit_array(trail_surface, trail_rgb)
     screen.blit(trail_surface, (0, 0))
+
+    # Use pygame.surfarray to draw the cone
+    # cone_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+    # pygame.surfarray.blit_array(cone_surface, cone_rgb)
+    # screen.blit(cone_surface, (0, 0))
+
 
     # Draw particles
     for idx,particle in enumerate(particles):
         # Draw debug lines
-        # Direction of the particle
-        pygame.draw.line(screen, (0, 255, 0), (int(particle.x), int(particle.y)), (int(particle.x + particle.dx*20), int(particle.y + particle.dy*20)), 1)
         
         # Calculate the points for the cone
         direction = math.atan2(particle.dy, particle.dx)
@@ -93,15 +91,17 @@ while running:
         right_line_start = (int(particle.x), int(particle.y))
         right_line_end = (int(particle.x + 20 * math.cos(right_angle)), int(particle.y + 20 * math.sin(right_angle)))
 
-        # Draw the lines
+        # Draw the cone lines
         pygame.draw.line(screen, (0, 0, 255), left_line_start, left_line_end, 1)
         pygame.draw.line(screen, (0, 0, 255), right_line_start, right_line_end, 1)
 
         
         # Draw the particle
         pygame.draw.circle(screen, (255, 0, 0), (int(particle.x), int(particle.y)), 3)
+        # Direction of the particle
+        pygame.draw.line(screen, (0, 255, 0), (int(particle.x), int(particle.y)), (int(particle.x + particle.dx*10), int(particle.y + particle.dy*10)), 1)
         # Target of the particle
-        if hasattr(particle, 'target'):
+        if particle.target[0] is not None and particle.target[1] is not None:
             pygame.draw.line(screen, (255, 0, 255), (int(particle.x), int(particle.y)), (int(particle.target[0]), int(particle.target[1])), 1)
         
 
