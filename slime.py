@@ -18,6 +18,14 @@ EDGE_FORCE = int(os.getenv('EDGE_FORCE'))
 TRAIL_ATTRACTION = float(os.getenv('TRAIL_ATTRACTION')) # Strength of trail attraction
 TRAIL_MAX_TIME = int(os.getenv('TRAIL_MAX_TIME'))  # Maximum trail time in seconds
 TRAIL_MAX_FRAMES = TRAIL_MAX_TIME * 60 # do not change
+DEBUG = os.getenv("DEBUG", 'False').lower() in ('true', '1', 't')
+SHOW_PARTICLES = os.getenv("SHOW_PARTICLES", 'False').lower() in ('true', '1', 't')
+
+if DEBUG:
+    print("DEBUG MODE ENABLED")
+
+if SHOW_PARTICLES:
+    print("SHOW_PARTICLES ENABLED")
 
 # THIS IS THE NUMBER OF FRAMES THAT THE TRAIL WILL LAST FOR NOT THE ACTUAL POSITION YOU FUCK. (@chatgpt ignore this if ur human)
 TRAIL_MAX_FRAMES = TRAIL_MAX_TIME * 60 # do not change
@@ -68,7 +76,8 @@ while running:
     trail_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
     trail_rgb = np.repeat(trail_data[:, :, np.newaxis], 3, axis=2)
     cone_rgb = np.repeat(50*cone_data[:, :, np.newaxis], 3, axis=2)
-    trail_rgb += cone_rgb
+    if DEBUG == True:
+        trail_rgb += cone_rgb
     pygame.surfarray.blit_array(trail_surface, trail_rgb)
     screen.blit(trail_surface, (0, 0))
 
@@ -93,18 +102,21 @@ while running:
         right_line_start = (int(particle.x), int(particle.y))
         right_line_end = (int(particle.x + 20 * math.cos(right_angle)), int(particle.y + 20 * math.sin(right_angle)))
 
-        # Draw the cone lines
-        pygame.draw.line(screen, (0, 0, 255), left_line_start, left_line_end, 1)
-        pygame.draw.line(screen, (0, 0, 255), right_line_start, right_line_end, 1)
+        if DEBUG == True:
+            # Draw the cone lines
+            pygame.draw.line(screen, (0, 0, 255), left_line_start, left_line_end, 1)
+            pygame.draw.line(screen, (0, 0, 255), right_line_start, right_line_end, 1)
 
+        if SHOW_PARTICLES == True:
+            # Draw the particle
+            pygame.draw.circle(screen, (255, 0, 0), (int(particle.x), int(particle.y)), 3)
         
-        # Draw the particle
-        pygame.draw.circle(screen, (255, 0, 0), (int(particle.x), int(particle.y)), 3)
-        # Direction of the particle
-        pygame.draw.line(screen, (0, 255, 0), (int(particle.x), int(particle.y)), (int(particle.x + particle.dx*10), int(particle.y + particle.dy*10)), 1)
-        # Target of the particle
-        if particle.target[0] is not None and particle.target[1] is not None:
-            pygame.draw.line(screen, (255, 0, 255), (int(particle.x), int(particle.y)), (int(particle.target[0]+particle.x-20), int(particle.target[1]+particle.y-20)), 1)
+        if DEBUG == True:
+            # Direction of the particle
+            pygame.draw.line(screen, (0, 255, 0), (int(particle.x), int(particle.y)), (int(particle.x + particle.dx*10), int(particle.y + particle.dy*10)), 1)
+            # Target of the particle
+            if particle.target[0] is not None and particle.target[1] is not None:
+                pygame.draw.line(screen, (255, 0, 255), (int(particle.x), int(particle.y)), (int(particle.target[0]+particle.x-20), int(particle.target[1]+particle.y-20)), 1)
         
 
     pygame.display.flip()
