@@ -33,8 +33,8 @@ py = random.randint(10, SCREEN_HEIGHT - 10)
 
 particles = [
     Particle(
-        random.randint(10, SCREEN_WIDTH - 10),
-        random.randint(10, SCREEN_HEIGHT -10),
+        random.randint(50, SCREEN_WIDTH - 50),
+        random.randint(50, SCREEN_HEIGHT -50),
         TRAIL_MAX_FRAMES
     ) for _ in range(PARTICLE_COUNT)
 ]
@@ -54,7 +54,9 @@ while running:
 
         trail_data,conem = particle.update(trail_data)
 
-        cone_data += conem
+        # cone_data += conem
+        # cone_data[particle.x-20:particle.x+20, particle.y-20:particle.y+20] += conem
+        cone_data[int(particle.x-20):int(particle.x+20), int(particle.y-20):int(particle.y+20)] += conem
         
 
     # reduce the trail over time
@@ -102,7 +104,7 @@ while running:
         pygame.draw.line(screen, (0, 255, 0), (int(particle.x), int(particle.y)), (int(particle.x + particle.dx*10), int(particle.y + particle.dy*10)), 1)
         # Target of the particle
         if particle.target[0] is not None and particle.target[1] is not None:
-            pygame.draw.line(screen, (255, 0, 255), (int(particle.x), int(particle.y)), (int(particle.target[0]), int(particle.target[1])), 1)
+            pygame.draw.line(screen, (255, 0, 255), (int(particle.x), int(particle.y)), (int(particle.target[0]+particle.x-20), int(particle.target[1]+particle.y-20)), 1)
         
 
     pygame.display.flip()

@@ -58,8 +58,14 @@ class Particle:
             return 0
 
     def update(self, trail_data):
+        
+        trail_data_2 = trail_data
+
+        trail_data = trail_data[int(self.x)-20:int(self.x)+20, int(self.y)-20:int(self.y)+20]
+
         # Define the visibility cone
-        cone_mask = np.zeros((SCREEN_HEIGHT, SCREEN_WIDTH), dtype=np.float32)
+        # cone_mask = np.zeros((SCREEN_HEIGHT, SCREEN_WIDTH), dtype=np.float32)
+        cone_mask = np.zeros((trail_data.shape[0], trail_data.shape[1]), dtype=np.float32)
         direction = math.atan2(self.dy, self.dx)
         left_angle = direction - math.pi / 6  # 30 degrees to the left
         right_angle = direction + math.pi / 6  # 30 degrees to the right
@@ -67,26 +73,13 @@ class Particle:
         # Generate cone points using polar coordinates
         for r in range(3,22):  # 20 pixels deep
             for theta in np.linspace(left_angle, right_angle, r + 1):  # 60 degrees wide
-                x = int(self.x + r * math.cos(theta))
-                y = int(self.y + r * math.sin(theta))
-                if 0 <= x < SCREEN_WIDTH and 0 <= y < SCREEN_HEIGHT:
+                x = int(20 + r * math.cos(theta))
+                y = int(20 + r * math.sin(theta))
+                if 0 <= x < cone_mask.shape[0] and 0 <= y < cone_mask.shape[1]:
                     cone_mask[x,y] = 1.0
 
         # Extract the visible trails
         visible_trails = trail_data * cone_mask
-
-        # Ignore the trail points that are directly behind the particle
-        # back_mask = np.zeros((SCREEN_HEIGHT, SCREEN_WIDTH), dtype=bool)
-        # back_direction = math.atan2(-self.dy, -self.dx)
-        # back_left_angle = back_direction - math.pi / 6  # 30 degrees to the left
-        # back_right_angle = back_direction + math.pi / 6  # 30 degrees to the right
-        # for r in range(10):  # 10 pixels deep behind the particle
-        #     for theta in np.linspace(back_left_angle, back_right_angle, r + 1):  # 60 degrees wide
-        #         x = int(self.x + r * math.cos(theta))
-        #         y = int(self.y + r * math.sin(theta))
-        #         if 0 <= x < SCREEN_WIDTH and 0 <= y < SCREEN_HEIGHT:
-        #             back_mask[y, x] = True
-        # visible_trails = visible_trails * ~back_mask
 
         max_intensity = np.max(visible_trails)
         max_index = np.argmax(visible_trails)
@@ -103,8 +96,8 @@ class Particle:
             #closest_index = closest_index[::-1]  # swap x and y
 
             # Compute direction to the least faded section of the trail
-            dir_x = closest_index[0] - self.x
-            dir_y = closest_index[1] - self.y
+            dir_x = closest_index[0] - 20#self.x
+            dir_y = closest_index[1] - 20#self.y
             magnitude = math.sqrt(dir_x ** 2 + dir_y ** 2)
 
             # Only change direction if the trail intensity is above a certain level and the trail is not newly created
@@ -146,7 +139,7 @@ class Particle:
         self.x += self.dx
         self.y += self.dy
 
-        trail_data = self.update_past_positions(trail_data)
+        trail_data = self.update_past_positions(trail_data_2)
 
         self.updates += 1
 
