@@ -58,6 +58,7 @@ if RANDOM_PARTICLE_POSITIONS:
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
+elapsed_time = 0
 
 px = EDGE_FORCE
 py = SCREEN_HEIGHT-EDGE_FORCE
@@ -92,6 +93,23 @@ trail_data = np.zeros((SCREEN_WIDTH, SCREEN_HEIGHT), dtype=np.float32)
 # update dx, dy from trail data including trail attraction and boundary repulsion   
 cone_data = np.zeros((SCREEN_WIDTH, SCREEN_HEIGHT), dtype=np.float32)
 
+def add_particles(px,py):
+    global particles
+    if RANDOM_PARTICLE_POSITIONS:
+        for _ in range(PARTICLE_COUNT):
+            particles.append(Particle(
+                random.randint(EDGE_FORCE, SCREEN_WIDTH - EDGE_FORCE),
+                random.randint(EDGE_FORCE, SCREEN_HEIGHT - EDGE_FORCE),
+                TRAIL_MAX_FRAMES
+            ))
+    else:
+        for _ in range(PARTICLE_COUNT):
+            particles.append(Particle(
+                px,py,
+                TRAIL_MAX_FRAMES
+            ))
+        
+
 def sim_update():
     # while True:
     global trail_data
@@ -114,7 +132,7 @@ def sim_update():
         cone_data[int(particle.x-CONE_LENGTH):int(particle.x+CONE_LENGTH), int(particle.y-CONE_LENGTH):int(particle.y+CONE_LENGTH)] += conem
 
     # reduce the trail over time
-    trail_data = np.maximum(trail_data - 0.2/TRAIL_MAX_FRAMES, 0)
+    trail_data = np.maximum(trail_data - TRAIL_ATTRACTION/TRAIL_MAX_FRAMES, 0)
 
     # time.sleep(1/FPS)
 
@@ -124,12 +142,17 @@ def sim_update():
 
 running = True
 counter = 0
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-    # if counter % 300 == 0:
+    if counter % 300 == 0:
+        print('adding more particles')
+        add_particles(px, py)
+           
+    # if counter % 500 == 0:
     #    print('resetting particles')
     #    for particle in particles:
     #        particle.reset(px, py, TRAIL_MAX_FRAMES)
@@ -165,9 +188,14 @@ while running:
     # screen.blit(cone_surface, (0, 0))
 
 
-    # Draw particles
+    # Draw simulation
     for idx,particle in enumerate(particles):
-        # Draw debug lines
+        
+        
+        if SHOW_CITY == True:
+            for city in cities:
+                # Draw the city center
+                pygame.draw.circle(screen, (0, 172, 92), (int(city.x), int(city.y)), 6)
         
         if DEBUG == True:
             # Calculate the points for the cone
@@ -189,11 +217,6 @@ while running:
             # Draw the particle
             pygame.draw.circle(screen, (255, 0, 0), (int(particle.x), int(particle.y)), 2)
         
-        if SHOW_CITY == True:
-            for city in cities:
-                # Draw the city center
-                pygame.draw.circle(screen, (0, 50, 150), (int(city.x), int(city.y)), 3)
-
         if DEBUG == True:
             # Direction of the particle
             pygame.draw.line(screen, (0, 255, 0), (int(particle.x), int(particle.y)), (int(particle.x + particle.dx*10), int(particle.y + particle.dy*10)), 1)
@@ -203,7 +226,15 @@ while running:
         
 
     pygame.display.flip()
-    clock.tick(60)
+    clock.tick(FPS)
+    # dt = clock.tick(FPS)
+    # elapsed_time += dt
+
+    # if elapsed_time >= 20000:
+    #     print('resetting particles')
+    #     for particle in particles:
+    #         particle.reset(px, py, TRAIL_MAX_FRAMES)
+    #     elapsed_time -= 20000
 
     counter += 1
 

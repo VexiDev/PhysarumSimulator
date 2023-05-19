@@ -34,11 +34,11 @@ class Particle:
         self.dy = random.uniform(-1, 1)
         self.prev_dx = self.dx
         self.prev_dy = self.dy
-        self.past_positions = np.full((TRAIL_MAX_FRAMES, 2), fill_value=[self.x, self.y])
+        self.past_positions = np.full((trail_max_frames, 2), fill_value=[self.x, self.y])
         self.target = [None, None]
         #self.trail_index = 0
         # self.trail_length = trail_max_frames
-        self.trail_strength = 0.2
+        self.trail_strength = TRAIL_ATTRACTION
 
     def reset(self,x,y, trail_max_frames):
         if not RANDOM_PARTICLE_POSITIONS:
@@ -55,7 +55,7 @@ class Particle:
         self.target = [None, None]
         #self.trail_index = 0
         # self.trail_length = trail_max_frames
-        self.trail_strength = 0.2
+        self.trail_strength = TRAIL_ATTRACTION
 
     def update_past_positions(self, trail_data):
         # Shift the old positions
@@ -68,7 +68,7 @@ class Particle:
         x, y = self.past_positions[-1]  
         if 0 <= x < SCREEN_WIDTH and 0 <= y < SCREEN_HEIGHT:
              # We assume the fade value to be 1 for the newest position
-            trail_data[int(x), int(y)] = 0.2 #self.trail_strength
+            trail_data[int(x), int(y)] = TRAIL_ATTRACTION #self.trail_strength
 
         #val = self.trail_strength
         #dv = self.trail_strength / len(self.past_positions)
@@ -100,8 +100,8 @@ class Particle:
         trail_data += cdat
 
         self.trail_strength = float(np.max(cdat))
-        if self.trail_strength<0.2:
-            self.trail_strength=0.2
+        if self.trail_strength<TRAIL_ATTRACTION:
+            self.trail_strength=TRAIL_ATTRACTION
      
         # Define the visibility cone
         # cone_mask = np.zeros((SCREEN_HEIGHT, SCREEN_WIDTH), dtype=np.float32)
