@@ -2,7 +2,6 @@ from dotenv import load_dotenv
 import numpy as np
 import random
 import math
-import sys
 import os
 
 # Load the .env file
@@ -10,12 +9,21 @@ load_dotenv()
 
 # Constants
 SCREEN_WIDTH, SCREEN_HEIGHT = int(os.getenv('SCREEN_WIDTH')), int(os.getenv('SCREEN_HEIGHT'))
+
 PARTICLE_COUNT = int(os.getenv('PARTICLE_COUNT'))
+RANDOM_PARTICLE_POSITIONS = os.getenv("RANDOM_PARTICLE_POSITIONS", 'False').lower() in ('true', '1', 't')
 SPEED = float(os.getenv('SPEED'))
-EDGE_FORCE = int(os.getenv('EDGE_FORCE'))
+
+CONE_ANGLE = float(os.getenv('CONE_ANGLE'))
+CONE_LENGTH = float(os.getenv('CONE_LENGTH'))
+
+EDGE_FORCE = int(2*CONE_LENGTH+10) 
 TRAIL_ATTRACTION = float(os.getenv('TRAIL_ATTRACTION')) # Strength of trail attraction
+DETECTION_THRESHOLD = float(os.getenv('DETECTION_THRESHOLD')) # Strength of trail attraction
+
 TRAIL_MAX_TIME = int(os.getenv('TRAIL_MAX_TIME'))  # Maximum trail time in seconds
 TRAIL_MAX_FRAMES = TRAIL_MAX_TIME * 60 # do not change
+
 
 class Particle:
     def __init__(self, x, y, trail_max_frames):
@@ -26,11 +34,28 @@ class Particle:
         self.dy = random.uniform(-1, 1)
         self.prev_dx = self.dx
         self.prev_dy = self.dy
+        self.past_positions = np.full((1000, 2), fill_value=[self.x, self.y])
+        self.target = [None, None]
+        #self.trail_index = 0
+        # self.trail_length = trail_max_frames
+        self.trail_strength = 0.2
+
+    def reset(self,x,y, trail_max_frames):
+        if not RANDOM_PARTICLE_POSITIONS:
+            self.x = x
+            self.y = y
+        else:
+            self.x = random.randint(EDGE_FORCE, SCREEN_WIDTH - EDGE_FORCE)
+            self.y = random.randint(EDGE_FORCE, SCREEN_HEIGHT - EDGE_FORCE)
+        self.dx = random.uniform(-1, 1)
+        self.dy = random.uniform(-1, 1)
+        self.prev_dx = self.dx
+        self.prev_dy = self.dy
         self.past_positions = np.full((trail_max_frames, 2), fill_value=[self.x, self.y])
         self.target = [None, None]
-        self.trail_index = 0
-        self.trail_length = trail_max_frames
-        self.updates = 0
+        #self.trail_index = 0
+        # self.trail_length = trail_max_frames
+        self.trail_strength = 0.2
 
     def update_past_positions(self, trail_data):
         # Shift the old positions
@@ -40,10 +65,20 @@ class Particle:
         self.past_positions[-1] = [self.x, self.y]
 
         # Update trail_data with the new position
-        x, y = self.past_positions[-1]
-        if 0 <= x < SCREEN_WIDTH and 0 <= y < SCREEN_HEIGHT:
-            # We assume the fade value to be 1 for the newest position
-            trail_data[int(x), int(y)] = TRAIL_MAX_FRAMES
+        # x, y = self.past_positions[-1]  
+        # if 0 <= x < SCREEN_WIDTH and 0 <= y < SCREEN_HEIGHT:
+        #     # We assume the fade value to be 1 for the newest position
+        #     trail_data[int(x), int(y)] = self.trail_strength
+
+        val = self.trail_strength
+        dv = self.trail_strength / len(self.past_positions)
+        for pos in self.past_positions[::-1]:
+            x,y = pos
+            if 0 <= x < SCREEN_WIDTH and 0 <= y < SCREEN_HEIGHT:
+               # We assume the fade value to be 1 for the newest position
+               trail_data[int(x), int(y)] = val
+            #val -=dv
+
 
         # Return the updated trail_data
         return trail_data
@@ -57,31 +92,38 @@ class Particle:
         except:
             return 0
 
-    def update(self, trail_data):
-        
-        trail_data_2 = trail_data
+    def detect(self, trail_data_in, city_data_in):
 
-        trail_data = trail_data[int(self.x)-20:int(self.x)+20, int(self.y)-20:int(self.y)+20]
+        trail_data = trail_data_in[int(self.x-CONE_LENGTH):int(self.x+CONE_LENGTH), int(self.y-CONE_LENGTH):int(self.y+CONE_LENGTH)].copy()
 
+        cdat = city_data_in[int(self.x-CONE_LENGTH):int(self.x+CONE_LENGTH), int(self.y-CONE_LENGTH):int(self.y+CONE_LENGTH)]
+        trail_data += cdat
+
+        self.trail_strength = float(np.max(trail_data))
+        if self.trail_strength<0.2:
+            self.trail_strength=0.2
+     
         # Define the visibility cone
         # cone_mask = np.zeros((SCREEN_HEIGHT, SCREEN_WIDTH), dtype=np.float32)
         cone_mask = np.zeros((trail_data.shape[0], trail_data.shape[1]), dtype=np.float32)
         direction = math.atan2(self.dy, self.dx)
-        left_angle = direction - math.pi / 6  # 30 degrees to the left
-        right_angle = direction + math.pi / 6  # 30 degrees to the right
+        left_angle = direction - ((math.pi * (CONE_ANGLE/2))/180)  # 30 degrees to the left
+        right_angle = direction + ((math.pi * (CONE_ANGLE/2))/180)  # 30 degrees to the right
 
         # Generate cone points using polar coordinates
-        for r in range(3,22):  # 20 pixels deep
-            for theta in np.linspace(left_angle, right_angle, r + 1):  # 60 degrees wide
-                x = int(20 + r * math.cos(theta))
-                y = int(20 + r * math.sin(theta))
+        for r in range(3,int(CONE_LENGTH+2)):  # 20 pixels deep
+            for theta in np.linspace(left_angle, right_angle, 2*r + 1):  # 60 degrees wide
+                x = int(CONE_LENGTH + r * math.cos(theta))
+                y = int(CONE_LENGTH + r * math.sin(theta))
                 if 0 <= x < cone_mask.shape[0] and 0 <= y < cone_mask.shape[1]:
                     cone_mask[x,y] = 1.0
 
         # Extract the visible trails
         visible_trails = trail_data * cone_mask
-
-        max_intensity = np.max(visible_trails)
+        try:
+            max_intensity = np.max(visible_trails)
+        except:
+            print(visible_trails.shape)
         max_index = np.argmax(visible_trails)
 
         # Converting the index to coordinates
@@ -93,15 +135,19 @@ class Particle:
         if max_intensity > 0:
             max_intensity_indices = np.array(np.where(visible_trails == max_intensity)).T
             closest_index = min(max_intensity_indices, key=lambda index: np.linalg.norm([self.y - index[0], self.x - index[1]]))
-            #closest_index = closest_index[::-1]  # swap x and y
 
             # Compute direction to the least faded section of the trail
-            dir_x = closest_index[0] - 20#self.x
-            dir_y = closest_index[1] - 20#self.y
+            dir_x = closest_index[0] - CONE_LENGTH#self.x
+            dir_y = closest_index[1] - CONE_LENGTH#self.y
+
+            if np.random.random()<0.2:
+                dir_x = np.random.random()*2-1  
+                dir_y = np.random.random()*2-1
+
             magnitude = math.sqrt(dir_x ** 2 + dir_y ** 2)
 
             # Only change direction if the trail intensity is above a certain level and the trail is not newly created
-            if max_intensity > TRAIL_ATTRACTION:
+            if max_intensity > DETECTION_THRESHOLD:
                 self.dx += (dir_x / magnitude) * TRAIL_ATTRACTION
                 self.dy += (dir_y / magnitude) * TRAIL_ATTRACTION
                 self.target = closest_index  # Set the target attribute
@@ -135,17 +181,13 @@ class Particle:
             # Apply the desired speed
             self.dx = direction_dx * SPEED
             self.dy = direction_dy * SPEED
-
+        
+        return cone_mask
+    
+    def update_position(self):
+        
         self.x += self.dx
         self.y += self.dy
-
-        trail_data = self.update_past_positions(trail_data_2)
-
-        self.updates += 1
-
-        # with open('output.txt', 'a') as file:
-        #     print(f"#xy {self.x}, {self.y}", file=file)
-        #     print(f"#dxdy {self.dx}, {self.dy}", file=file)
     
-        return trail_data,cone_mask
+        return
 
