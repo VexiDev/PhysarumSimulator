@@ -114,7 +114,7 @@ def sim_update():
         cone_data[int(particle.x-CONE_LENGTH):int(particle.x+CONE_LENGTH), int(particle.y-CONE_LENGTH):int(particle.y+CONE_LENGTH)] += conem
 
     # reduce the trail over time
-    # trail_data = np.maximum(trail_data - 0.2/TRAIL_MAX_FRAMES, 0)
+    trail_data = np.maximum(trail_data - 0.2/TRAIL_MAX_FRAMES, 0)
 
     # time.sleep(1/FPS)
 

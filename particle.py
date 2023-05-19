@@ -34,7 +34,7 @@ class Particle:
         self.dy = random.uniform(-1, 1)
         self.prev_dx = self.dx
         self.prev_dy = self.dy
-        self.past_positions = np.full((1000, 2), fill_value=[self.x, self.y])
+        self.past_positions = np.full((TRAIL_MAX_FRAMES, 2), fill_value=[self.x, self.y])
         self.target = [None, None]
         #self.trail_index = 0
         # self.trail_length = trail_max_frames
@@ -65,19 +65,19 @@ class Particle:
         self.past_positions[-1] = [self.x, self.y]
 
         # Update trail_data with the new position
-        # x, y = self.past_positions[-1]  
-        # if 0 <= x < SCREEN_WIDTH and 0 <= y < SCREEN_HEIGHT:
-        #     # We assume the fade value to be 1 for the newest position
-        #     trail_data[int(x), int(y)] = self.trail_strength
+        x, y = self.past_positions[-1]  
+        if 0 <= x < SCREEN_WIDTH and 0 <= y < SCREEN_HEIGHT:
+             # We assume the fade value to be 1 for the newest position
+            trail_data[int(x), int(y)] = 0.2 #self.trail_strength
 
-        val = self.trail_strength
-        dv = self.trail_strength / len(self.past_positions)
-        for pos in self.past_positions[::-1]:
-            x,y = pos
-            if 0 <= x < SCREEN_WIDTH and 0 <= y < SCREEN_HEIGHT:
-               # We assume the fade value to be 1 for the newest position
-               trail_data[int(x), int(y)] = val
-            #val -=dv
+        #val = self.trail_strength
+        #dv = self.trail_strength / len(self.past_positions)
+        #for pos in self.past_positions[::-1]:
+        #    x,y = pos
+        #    if 0 <= x < SCREEN_WIDTH and 0 <= y < SCREEN_HEIGHT:
+        #       # We assume the fade value to be 1 for the newest position
+        #       trail_data[int(x), int(y)] = val
+        #    #val -=dv
 
 
         # Return the updated trail_data
@@ -99,7 +99,7 @@ class Particle:
         cdat = city_data_in[int(self.x-CONE_LENGTH):int(self.x+CONE_LENGTH), int(self.y-CONE_LENGTH):int(self.y+CONE_LENGTH)]
         trail_data += cdat
 
-        self.trail_strength = float(np.max(trail_data))
+        self.trail_strength = float(np.max(cdat))
         if self.trail_strength<0.2:
             self.trail_strength=0.2
      
