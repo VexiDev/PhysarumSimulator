@@ -61,9 +61,10 @@ clock = pygame.time.Clock()
 elapsed_time = 0
 
 px = EDGE_FORCE
-py = SCREEN_HEIGHT-EDGE_FORCE
+py = SCREEN_HEIGHT-EDGE_FORCE-random.randint(0, 20)
 
 if RANDOM_PARTICLE_POSITIONS:
+
     particles = [
     Particle(
         random.randint(EDGE_FORCE, SCREEN_WIDTH - EDGE_FORCE),
@@ -71,16 +72,19 @@ if RANDOM_PARTICLE_POSITIONS:
         TRAIL_MAX_FRAMES
     ) for _ in range(PARTICLE_COUNT)
     ]
+
 else:
     particles = [
     Particle(
-        px,py,
+        px+random.randint(0, 20),
+        py-random.randint(0, 20),
         TRAIL_MAX_FRAMES
     ) for _ in range(PARTICLE_COUNT)
     ]
 
 
-cities = [City() for _ in range(CITY_COUNT)]  # you can define NUMBER_OF_CITIES as per your requirement
+# cities = [City() for _ in range(CITY_COUNT)]  # you can define NUMBER_OF_CITIES as per your requirement
+cities = [City(216, 168),City(316,313)]  # you can define NUMBER_OF_CITIES as per your requirement
 
 city_data = np.zeros((SCREEN_WIDTH, SCREEN_HEIGHT), dtype=np.float32)
 
@@ -93,21 +97,20 @@ trail_data = np.zeros((SCREEN_WIDTH, SCREEN_HEIGHT), dtype=np.float32)
 # update dx, dy from trail data including trail attraction and boundary repulsion   
 cone_data = np.zeros((SCREEN_WIDTH, SCREEN_HEIGHT), dtype=np.float32)
 
-def add_particles(px,py):
+def add_particle(px,py):
     global particles
     if RANDOM_PARTICLE_POSITIONS:
-        for _ in range(PARTICLE_COUNT):
-            particles.append(Particle(
-                random.randint(EDGE_FORCE, SCREEN_WIDTH - EDGE_FORCE),
-                random.randint(EDGE_FORCE, SCREEN_HEIGHT - EDGE_FORCE),
-                TRAIL_MAX_FRAMES
-            ))
+        particles.append(Particle(
+            random.randint(EDGE_FORCE, SCREEN_WIDTH - EDGE_FORCE),
+            random.randint(EDGE_FORCE, SCREEN_HEIGHT - EDGE_FORCE),
+            TRAIL_MAX_FRAMES
+        ))
     else:
-        for _ in range(PARTICLE_COUNT):
-            particles.append(Particle(
-                px,py,
-                TRAIL_MAX_FRAMES
-            ))
+        particles.append(Particle(
+        px,
+        py,
+            TRAIL_MAX_FRAMES
+        ))
         
 
 def sim_update():
@@ -133,7 +136,7 @@ def sim_update():
 
     # reduce the trail over time
     trail_data = np.maximum(trail_data - TRAIL_ATTRACTION/TRAIL_MAX_FRAMES, 0)
-
+    # trail_data /= np.max(trail_data)
     # time.sleep(1/FPS)
 
 # thread = threading.Thread(target=sim_update)
@@ -148,15 +151,20 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    if counter % 300 == 0:
-        print('adding more particles')
-        add_particles(px, py)
+    # if counter % 300 == 0:
+    #     print('adding more particles')
+    #     add_particles(px, py)
            
-    # if counter % 500 == 0:
-    #    print('resetting particles')
-    #    for particle in particles:
-    #        particle.reset(px, py, TRAIL_MAX_FRAMES)
-    
+    if counter % 500 == 0:
+        print('resetting old particles')
+        diff = 0
+        for particle in particles:
+            if particle.trail_strength <= 0.8:
+                diff += 1
+                particle.reset(px, py, TRAIL_MAX_FRAMES)
+        for _ in range(PARTICLE_COUNT-diff):
+            add_particle(px+random.randint(0, 20), py-random.randint(0, 20))
+
     sim_update()
 
     screen.fill((0, 0, 0))

@@ -1,3 +1,4 @@
 *.txt
-___goaway____/
-__pycache__/
+.DS_Store
+___goaway___
+__pycache__

@@ -12,9 +12,12 @@ EDGE_FORCE = int(os.getenv('CONE_LENGTH')) + 10
 CITY_RADIUS = int(os.getenv('CITY_RADIUS'))
 
 class City:
-    def __init__(self):
-        self.x = random.randint(EDGE_FORCE+CITY_RADIUS, SCREEN_WIDTH - EDGE_FORCE-CITY_RADIUS)
-        self.y = random.randint(EDGE_FORCE+CITY_RADIUS, SCREEN_HEIGHT - EDGE_FORCE-CITY_RADIUS)
+    def __init__(self, x, y):
+        # self.x = random.randint(EDGE_FORCE+CITY_RADIUS, SCREEN_WIDTH - EDGE_FORCE-CITY_RADIUS)
+        # self.y = random.randint(EDGE_FORCE+CITY_RADIUS, SCREEN_HEIGHT - EDGE_FORCE-CITY_RADIUS)
+        self.x = x
+        self.y = y
+        print(f"City at ({self.x}, {self.y})")
 
     def generate_city_data(self):
         city_data = np.zeros((SCREEN_WIDTH, SCREEN_HEIGHT), dtype=np.float32)
