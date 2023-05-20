@@ -161,13 +161,15 @@ while running:
     #     add_particles(px, py)
 
     if RESET_OLD == True: 
-        if counter % 500 == 0:
+        if counter % 300 == 0:
             print('resetting old particles')
             diff = 0
             for particle in particles:
                 if particle.trail_strength <= 0.99:
                     diff += 1
-                    particle.reset(px, py, TRAIL_MAX_FRAMES)
+                    # particle.reset(px, py, TRAIL_MAX_FRAMES)
+                    if particle.trail_strength>0.7:
+                        particle.disable_detection = True
 
             print(diff, len(particles)-diff)
             for _ in range(PARTICLE_COUNT-diff):

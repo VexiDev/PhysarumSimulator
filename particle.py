@@ -20,6 +20,7 @@ CONE_LENGTH = float(os.getenv('CONE_LENGTH'))
 EDGE_FORCE = int(2*CONE_LENGTH+10) 
 TRAIL_ATTRACTION = float(os.getenv('TRAIL_ATTRACTION')) # Strength of trail attraction
 DETECTION_THRESHOLD = float(os.getenv('DETECTION_THRESHOLD')) # Strength of trail attraction
+MIN_TRAIL_STRENGTH = float(os.getenv('MIN_TRAIL_STRENGTH')) # Strength of trail attraction
 
 TRAIL_MAX_TIME = int(os.getenv('TRAIL_MAX_TIME'))  # Maximum trail time in seconds
 TRAIL_MAX_FRAMES = TRAIL_MAX_TIME * 60 # do not change
@@ -36,6 +37,7 @@ class Particle:
         self.prev_dy = self.dy
         self.past_positions = np.full((1000, 2), fill_value=[self.x, self.y])
         self.target = [None, None]
+        self.disable_detection = False
         #self.trail_index = 0
         # self.trail_length = trail_max_frames
         self.trail_strength = TRAIL_ATTRACTION
@@ -53,6 +55,7 @@ class Particle:
         self.prev_dy = self.dy
         self.past_positions = np.full((1000, 2), fill_value=[self.x, self.y])
         self.target = [None, None]
+        self.disable_detection = False
         #self.trail_index = 0
         #self.trail_length = trail_max_frames
         self.trail_strength = TRAIL_ATTRACTION
@@ -101,9 +104,12 @@ class Particle:
         trail_data += cdat
 
         self.trail_strength = float(np.max(cdat))
-        if self.trail_strength<TRAIL_ATTRACTION:
-            self.trail_strength=TRAIL_ATTRACTION
-     
+        if self.trail_strength<MIN_TRAIL_STRENGTH:
+            self.trail_strength=MIN_TRAIL_STRENGTH
+
+        if self.disable_detection and self.trail_strength<0.4:
+           self.disable_detection = False
+
         # Define the visibility cone
         # cone_mask = np.zeros((SCREEN_HEIGHT, SCREEN_WIDTH), dtype=np.float32)
         cone_mask = np.zeros((trail_data.shape[0], trail_data.shape[1]), dtype=np.float32)
@@ -134,6 +140,7 @@ class Particle:
 
         # If the particle is not on a trail, follow the least faded trail
         if max_intensity > 0:
+
             max_intensity_indices = np.array(np.where(visible_trails == max_intensity)).T
             closest_index = min(max_intensity_indices, key=lambda index: np.linalg.norm([self.y - index[0], self.x - index[1]]))
 
@@ -158,7 +165,7 @@ class Particle:
             magnitude = math.sqrt(dir_x ** 2 + dir_y ** 2)
 
             # Only change direction if the trail intensity is above a certain level and the trail is not newly created
-            if max_intensity > DETECTION_THRESHOLD:
+            if max_intensity > DETECTION_THRESHOLD and self.disable_detection != True:
                 self.dx += (dir_x / magnitude) * TRAIL_ATTRACTION
                 self.dy += (dir_y / magnitude) * TRAIL_ATTRACTION
                 self.target = closest_index  # Set the target attribute
