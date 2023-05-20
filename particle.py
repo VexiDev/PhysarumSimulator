@@ -80,7 +80,8 @@ class Particle:
            x,y = pos
            if 0 <= x < SCREEN_WIDTH and 0 <= y < SCREEN_HEIGHT:
               # We assume the fade value to be 1 for the newest position
-              trail_data[int(x), int(y)] = val
+              if trail_data[int(x), int(y)] < val:
+                trail_data[int(x), int(y)] = val
            val -= dv
 
 

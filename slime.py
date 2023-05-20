@@ -58,6 +58,7 @@ if RANDOM_PARTICLE_POSITIONS:
 # Initial setup
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Particle Physarium Simulator")
 clock = pygame.time.Clock()
 elapsed_time = 0
 
@@ -166,9 +167,10 @@ while running:
             print('disabling detection for particles in city')
             diff = 0
             for particle in particles:
-                if particle.trail_strength <= 0.99:
+                # if the particles are not in the city center
+                if particle.trail_strength <= 0.995:
                     # particle.reset(px, py, TRAIL_MAX_FRAMES)
-                    if particle.trail_strength>0.7:
+                    if particle.trail_strength>=0.6:
                         diff += 1
                         particle.disable_detection = True
                     else:
