@@ -88,7 +88,7 @@ else:
 
 
 # cities = [City(0,0) for _ in range(CITY_COUNT)]  # you can define NUMBER_OF_CITIES as per your requirement
-cities = [City(216, 168),City(316,313)]  # you can define NUMBER_OF_CITIES as per your requirement
+cities = [City(216, 168),City(316,313), City(500, 100)]  # you can define NUMBER_OF_CITIES as per your requirement
 
 city_data = np.zeros((SCREEN_WIDTH, SCREEN_HEIGHT), dtype=np.float32)
 
@@ -160,20 +160,26 @@ while running:
     #     print('adding more particles')
     #     add_particles(px, py)
 
-    if RESET_OLD == True: 
+    if RESET_OLD == True:
+        to_reset = []
         if counter % 300 == 0:
-            print('resetting old particles')
+            print('disabling detection for particles in city')
             diff = 0
             for particle in particles:
                 if particle.trail_strength <= 0.99:
-                    diff += 1
                     # particle.reset(px, py, TRAIL_MAX_FRAMES)
                     if particle.trail_strength>0.7:
+                        diff += 1
                         particle.disable_detection = True
+                    else:
+                        to_reset.append(particle)
 
-            print(diff, len(particles)-diff)
-            for _ in range(PARTICLE_COUNT-diff):
-                add_particle(px+random.randint(0, 20), py-random.randint(0, 20))
+            print("Disabled:", diff, "Amount Safe:", len(particles)-diff)
+            # for _ in range(PARTICLE_COUNT-diff):
+        # if counter % 600 == 0:
+            for p in to_reset:
+                # add_particle(px+random.randint(0, 20), py-random.randint(0, 20))
+                p.reset(px, py, TRAIL_MAX_FRAMES)
 
     sim_update()
 
