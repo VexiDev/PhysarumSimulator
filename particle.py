@@ -54,7 +54,7 @@ class Particle:
         self.past_positions = np.full((1000, 2), fill_value=[self.x, self.y])
         self.target = [None, None]
         #self.trail_index = 0
-        # self.trail_length = trail_max_frames
+        #self.trail_length = trail_max_frames
         self.trail_strength = TRAIL_ATTRACTION
 
     def update_past_positions(self, trail_data):
@@ -71,13 +71,14 @@ class Particle:
         #     trail_data[int(x), int(y)] = TRAIL_ATTRACTION #self.trail_strength
 
         val = self.trail_strength
-        dv = self.trail_strength / len(self.past_positions)
+        # dv = self.trail_strength / (4*len(self.past_positions))
+        dv = 0.001
         for pos in self.past_positions[::-1]:
            x,y = pos
            if 0 <= x < SCREEN_WIDTH and 0 <= y < SCREEN_HEIGHT:
               # We assume the fade value to be 1 for the newest position
               trail_data[int(x), int(y)] = val
-        #    val -= dv
+           val -= dv
 
 
         # Return the updated trail_data
@@ -92,7 +93,7 @@ class Particle:
         except:
             return 0
 
-    def detect(self, trail_data_in, city_data_in):
+    def detect(self, trail_data_in, city_data_in, px, py):
 
         trail_data = trail_data_in[int(self.x-CONE_LENGTH):int(self.x+CONE_LENGTH), int(self.y-CONE_LENGTH):int(self.y+CONE_LENGTH)].copy()
 
@@ -140,9 +141,19 @@ class Particle:
             dir_x = closest_index[0] - CONE_LENGTH#self.x
             dir_y = closest_index[1] - CONE_LENGTH#self.y
 
-            if np.random.random()<0.1:
-                dir_x = np.random.random()*2-1  
-                dir_y = np.random.random()*2-1
+            # break away from trails every probability
+            if np.random.random()<0.4:
+                # randomly pick a direction in a 90 degree cone
+                # current_angle = np.arctan2(dir_y, dir_x)  # get the current angle (in radians)
+                # delta_angle = np.random.uniform(-np.pi / 4, np.pi / 4)  # change within +/-45 degrees (in radians)
+                # new_angle = current_angle + delta_angle
+                # mag = np.sqrt(dir_x**2 + dir_y**2)
+                # dir_x = mag * np.cos(new_angle)
+                # dir_y = mag * np.sin(new_angle)
+                dir_x = np.random.uniform()*2-1
+                dir_y = np.random.uniform()*2-1
+
+                
 
             magnitude = math.sqrt(dir_x ** 2 + dir_y ** 2)
 
@@ -161,16 +172,19 @@ class Particle:
                 # print(f"Particle lost sight of trail at {self.target}")
                 self.target = [None,None]  # Reset the target attribute
 
-        if self.x < EDGE_FORCE:
-            self.dx += (EDGE_FORCE - self.x) * 0.1
-        elif self.x > SCREEN_WIDTH - EDGE_FORCE:
-            self.dx -= (self.x - (SCREEN_WIDTH - EDGE_FORCE)) * 0.1
+        # if self.x < EDGE_FORCE:
+        #     self.dx += (EDGE_FORCE - self.x) * 0.1
+        # elif self.x > SCREEN_WIDTH - EDGE_FORCE:
+        #     self.dx -= (self.x - (SCREEN_WIDTH - EDGE_FORCE)) * 0.1
 
-        if self.y < EDGE_FORCE:
-            self.dy += (EDGE_FORCE - self.y) * 0.1
-        elif self.y > SCREEN_HEIGHT - EDGE_FORCE:
-            self.dy -= (self.y - (SCREEN_HEIGHT - EDGE_FORCE)) * 0.1
+        # if self.y < EDGE_FORCE:
+        #     self.dy += (EDGE_FORCE - self.y) * 0.1
+        # elif self.y > SCREEN_HEIGHT - EDGE_FORCE:
+        #     self.dy -= (self.y - (SCREEN_HEIGHT - EDGE_FORCE)) * 0.1
 
+        if self.x < EDGE_FORCE or self.x > SCREEN_WIDTH - EDGE_FORCE or self.y < EDGE_FORCE or self.y > SCREEN_HEIGHT - EDGE_FORCE:
+            self.reset(px, py, TRAIL_MAX_FRAMES)
+        
         # Normalize speed
         direction_magnitude = math.sqrt(self.dx ** 2 + self.dy ** 2)
 
