@@ -37,7 +37,7 @@ class Particle:
         self.prev_dy = self.dy
         self.past_positions = np.full((1000, 2), fill_value=[self.x, self.y])
         self.target = [None, None]
-        self.disable_detection = False
+        self.disable_detection = True
         self.trail_length =0
         self.stopped = False
         #self.trail_index = 0
@@ -57,7 +57,7 @@ class Particle:
         self.prev_dy = self.dy
         self.past_positions = np.full((1000, 2), fill_value=[self.x, self.y])
         self.target = [None, None]
-        self.disable_detection = False
+        self.disable_detection = True
         self.trail_length=0
         self.stopped = False
         #self.trail_index = 0
@@ -120,7 +120,7 @@ class Particle:
         if self.nutrient_strength<MIN_TRAIL_STRENGTH:
             self.nutrient_strength=MIN_TRAIL_STRENGTH
 
-        if self.nutrient_strength > 0.9 and not self.disable_detection:
+        if self.nutrient_strength > 0.9 and self.disable_detection==False:
             self.stopped = True
         
 
@@ -168,14 +168,15 @@ class Particle:
             # break away from trails every probability
             if np.random.random()<0.4:
                 # randomly pick a direction in a 90 degree cone
-                #  current_angle = np.arctan2(dir_y, dir_x)  # get the current angle (in radians)
-                #  delta_angle = np.random.uniform(-np.pi / 4, np.pi / 4)  # change within +/-45 degrees (in radians)
-                #  new_angle = current_angle + delta_angle
-                #  mag = np.sqrt(dir_x**2 + dir_y**2)
-                #  dir_x = mag * np.cos(new_angle)
-                #  dir_y = mag * np.sin(new_angle)
-                dir_x = np.random.uniform()*2-1
-                dir_y = np.random.uniform()*2-1
+                current_angle = np.arctan2(dir_y, dir_x)  # get the current angle (in radians)
+                maxangle = (90-CONE_ANGLE/2)*math.pi/180 
+                delta_angle = np.random.uniform(-maxangle, maxangle) 
+                new_angle = current_angle + delta_angle
+                mag = np.sqrt(dir_x**2 + dir_y**2)
+                dir_x = mag * np.cos(new_angle)
+                dir_y = mag * np.sin(new_angle)
+                # dir_x = np.random.uniform()*2-1
+                # dir_y = np.random.uniform()*2-1
 
                 
 

@@ -62,11 +62,37 @@ pygame.display.set_caption("Particle Physarium Simulator")
 clock = pygame.time.Clock()
 elapsed_time = 0
 
-px = EDGE_FORCE
-py = SCREEN_HEIGHT-EDGE_FORCE-random.randint(0, 20)
+# px = EDGE_FORCE+CITY_RADIUS+50
+# py = SCREEN_HEIGHT-EDGE_FORCE-CITY_RADIUS-50
 
-px += random.randint(0, 200)
-py -= random.randint(0, 200)
+# px += random.randint(0, 50)
+# py -= random.randint(0, 50)
+
+#cities = [City(0,0) for _ in range(CITY_COUNT)]  # you can define NUMBER_OF_CITIES as per your requirement
+# cities = [City(px,py), City(216, 168),City(316,313), City(500, 100)]  # you can define NUMBER_OF_CITIES as per your requirement
+
+cities = []
+while True:
+    x = random.randint(EDGE_FORCE+CITY_RADIUS, SCREEN_WIDTH - EDGE_FORCE-CITY_RADIUS)
+    y = random.randint(EDGE_FORCE+CITY_RADIUS, SCREEN_HEIGHT - EDGE_FORCE-CITY_RADIUS)
+    new_city_ok = True
+    for existing_cites in cities:
+        if math.sqrt((x - existing_cites.x) ** 2 + (y - existing_cites.y) ** 2) < 2.5*CITY_RADIUS:
+            new_city_ok = False
+            break    
+    if new_city_ok:
+        cities.append(City(x,y))
+    if len(cities) == CITY_COUNT+1:
+        break
+
+px = cities[0].x
+py = cities[0].y
+
+city_data = np.zeros((SCREEN_WIDTH, SCREEN_HEIGHT), dtype=np.float32)
+
+for city in cities:
+    city_data += city.generate_city_data()
+city_data = np.maximum(city_data, 0)
 
 if RANDOM_PARTICLE_POSITIONS:
 
@@ -86,16 +112,6 @@ else:
         TRAIL_MAX_FRAMES
     ) for _ in range(PARTICLE_COUNT)
     ]
-
-
-# cities = [City(0,0) for _ in range(CITY_COUNT)]  # you can define NUMBER_OF_CITIES as per your requirement
-cities = [City(216, 168),City(316,313), City(500, 100)]  # you can define NUMBER_OF_CITIES as per your requirement
-
-city_data = np.zeros((SCREEN_WIDTH, SCREEN_HEIGHT), dtype=np.float32)
-
-for city in cities:
-    city_data += city.generate_city_data()
-city_data = np.maximum(city_data, 0)
 
 trail_data = np.zeros((SCREEN_WIDTH, SCREEN_HEIGHT), dtype=np.float32)
 
@@ -119,8 +135,8 @@ def add_particle(px,py):
         
 def reset_particles(counter):
     to_reset = []
-    if counter % 350 == 0:
-        print('disabling detection for particles in city')
+    if counter % 600 == 0:
+        print('Pulsing.')
         diff = 0
         for particle in particles:
             # if the particles are not in the city center
@@ -130,10 +146,14 @@ def reset_particles(counter):
                     diff += 1
                     particle.stopped = False
                     particle.disable_detection = True
+                    particle.dx = random.uniform(-1, 1)
+                    particle.dy = random.uniform(-1, 1)
+
+                    #particle.reset(particle.x,particle.y, TRAIL_MAX_FRAMES)
             else:
                 to_reset.append(particle)
 
-        print("Disabled/Unstopped:", diff, "Safe:", len(particles)-diff)
+        print("Disabled:", diff, "Safe:", len(particles)-diff)
     
         for p in to_reset:
             # add_particle(px+random.randint(0, 20), py-random.randint(0, 20))
