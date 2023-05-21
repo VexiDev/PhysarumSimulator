@@ -117,13 +117,37 @@ def add_particle(px,py):
             TRAIL_MAX_FRAMES
         ))
         
+def reset_particles(counter):
+    to_reset = []
+    if counter % 350 == 0:
+        print('disabling detection for particles in city')
+        diff = 0
+        for particle in particles:
+            # if the particles are not in the city center
+            if particle.stopped == True:
+                x = random.uniform(0, 1)
+                if x > 0.3:
+                    diff += 1
+                    particle.stopped = False
+                    particle.disable_detection = True
+            else:
+                to_reset.append(particle)
 
-def sim_update():
+        print("Disabled/Unstopped:", diff, "Safe:", len(particles)-diff)
+    
+        for p in to_reset:
+            # add_particle(px+random.randint(0, 20), py-random.randint(0, 20))
+            p.reset(px, py, TRAIL_MAX_FRAMES)
+
+def sim_update(counter):
     # while True:
     global trail_data
     global city_data
     global cone_data
     global particles
+
+    if RESET_OLD == True:
+        reset_particles(counter)
 
     # update particle position from dx,dy
     for p in particles:
@@ -180,34 +204,7 @@ while running:
             elif event.key == pygame.K_d: 
                 DEBUG = not DEBUG  
 
-
-    # if counter % 300 == 0:
-    #     print('adding more particles')
-    #     add_particles(px, py)
-
-    if RESET_OLD == True:
-        to_reset = []
-        if counter % 350 == 0:
-            print('disabling detection for particles in city')
-            diff = 0
-            for particle in particles:
-                # if the particles are not in the city center
-                if particle.trail_strength <= 0.95:
-                    # particle.reset(px, py, TRAIL_MAX_FRAMES)
-                    if particle.trail_strength>=0.6:
-                        diff += 1
-                        particle.disable_detection = True
-                    else:
-                        to_reset.append(particle)
-
-            print("Disabled:", diff, "Amount Safe:", len(particles)-diff)
-            # for _ in range(PARTICLE_COUNT-diff):
-        # if counter % 600 == 0:
-            for p in to_reset:
-                # add_particle(px+random.randint(0, 20), py-random.randint(0, 20))
-                p.reset(px, py, TRAIL_MAX_FRAMES)
-
-    sim_update()
+    sim_update(counter)
 
     screen.fill((0, 0, 0))
 
@@ -238,7 +235,7 @@ while running:
         if SHOW_CITY == True:
             for city in cities:
                 # Draw the city center
-                pygame.draw.circle(screen, (0, 172, 92), (int(city.x), int(city.y)), 6)
+                pygame.draw.circle(screen, (0, 172, 92), (int(city.x), int(city.y)), 8)
         
         # Draw a boundary square based to represent the EDGE_FORCE boundary
         pygame.draw.rect(screen, (150, 150, 150), (EDGE_FORCE, EDGE_FORCE, SCREEN_WIDTH - EDGE_FORCE * 2, SCREEN_HEIGHT - EDGE_FORCE * 2), 1)

@@ -39,9 +39,10 @@ class Particle:
         self.target = [None, None]
         self.disable_detection = False
         self.trail_length =0
+        self.stopped = False
         #self.trail_index = 0
         # self.trail_length = trail_max_frames
-        self.trail_strength = TRAIL_ATTRACTION
+        self.nutrient_strength = MIN_TRAIL_STRENGTH
 
     def reset(self,x,y, trail_max_frames):
         if not RANDOM_PARTICLE_POSITIONS:
@@ -58,25 +59,28 @@ class Particle:
         self.target = [None, None]
         self.disable_detection = False
         self.trail_length=0
+        self.stopped = False
         #self.trail_index = 0
         #self.trail_length = trail_max_frames
-        self.trail_strength = TRAIL_ATTRACTION
+        self.nutrient_strength = MIN_TRAIL_STRENGTH
 
     def update_past_positions(self, trail_data):
-        # Shift the old positions
-        self.past_positions = np.roll(self.past_positions, -1, axis=0)
         
-        # Add the new position
-        self.past_positions[-1] = [self.x, self.y]
+        if not self.stopped:
+            # Shift the old positions
+            self.past_positions = np.roll(self.past_positions, -1, axis=0)
+        
+            # Add the new position
+            self.past_positions[-1] = [self.x, self.y]
 
         # Update trail_data with the new position
         # x, y = self.past_positions[-1]  
         # if 0 <= x < SCREEN_WIDTH and 0 <= y < SCREEN_HEIGHT:
         #      # We assume the fade value to be 1 for the newest position
-        #     trail_data[int(x), int(y)] = TRAIL_ATTRACTION #self.trail_strength
+        #     trail_data[int(x), int(y)] = TRAIL_ATTRACTION #self.nutrient_strength
 
-        val = self.trail_strength * self.trail_length
-        # dv = self.trail_strength / (4*len(self.past_positions))
+        val = self.nutrient_strength * self.trail_length
+        # dv = self.nutrient_strength / (4*len(self.past_positions))
         dv = 0.001 
         for pos in self.past_positions[::-1]:
            x,y = pos
@@ -110,12 +114,17 @@ class Particle:
         cdat = city_data_in[int(self.x-CONE_LENGTH):int(self.x+CONE_LENGTH), int(self.y-CONE_LENGTH):int(self.y+CONE_LENGTH)]
         trail_data += cdat
 
-        # self.trail_strength = float(np.max(cdat))
-        self.trail_strength = cdat[int(CONE_LENGTH), int(CONE_LENGTH)]
-        if self.trail_strength<MIN_TRAIL_STRENGTH:
-            self.trail_strength=MIN_TRAIL_STRENGTH
+        # self.nutrient_strength = float(np.max(cdat))
+        raw_local_nutrient = cdat[int(CONE_LENGTH), int(CONE_LENGTH)]
+        self.nutrient_strength = raw_local_nutrient
+        if self.nutrient_strength<MIN_TRAIL_STRENGTH:
+            self.nutrient_strength=MIN_TRAIL_STRENGTH
 
-        if self.disable_detection and self.trail_strength<0.4:
+        if self.nutrient_strength > 0.9 and not self.disable_detection:
+            self.stopped = True
+        
+
+        if self.disable_detection and raw_local_nutrient==0:
            self.disable_detection = False
 
         # Define the visibility cone
@@ -215,8 +224,7 @@ class Particle:
     
     def update_position(self):
         
-        if self.trail_strength>0.99:
-            print(self.trail_strength)
+        if self.stopped:
             return
         self.x += self.dx
         self.y += self.dy
