@@ -82,7 +82,7 @@ while True:
             break    
     if new_city_ok:
         cities.append(City(x,y))
-    if len(cities) == CITY_COUNT+1:
+    if len(cities) == CITY_COUNT:
         break
 
 px = cities[0].x
