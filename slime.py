@@ -156,6 +156,17 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_p:
+                SHOW_PARTICLES = not SHOW_PARTICLES  
+            elif event.key == pygame.K_c: 
+                SHOW_CITY = not SHOW_CITY  
+            elif event.key == pygame.K_r: 
+                SHOW_RADIUS = not SHOW_RADIUS  
+            elif event.key == pygame.K_d: 
+                DEBUG = not DEBUG  
+
 
     # if counter % 300 == 0:
     #     print('adding more particles')
