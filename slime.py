@@ -192,7 +192,7 @@ while running:
             diff = 0
             for particle in particles:
                 # if the particles are not in the city center
-                if particle.trail_strength <= 0.995:
+                if particle.trail_strength <= 0.95:
                     # particle.reset(px, py, TRAIL_MAX_FRAMES)
                     if particle.trail_strength>=0.6:
                         diff += 1

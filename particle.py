@@ -110,7 +110,8 @@ class Particle:
         cdat = city_data_in[int(self.x-CONE_LENGTH):int(self.x+CONE_LENGTH), int(self.y-CONE_LENGTH):int(self.y+CONE_LENGTH)]
         trail_data += cdat
 
-        self.trail_strength = float(np.max(cdat))
+        # self.trail_strength = float(np.max(cdat))
+        self.trail_strength = cdat[int(CONE_LENGTH), int(CONE_LENGTH)]
         if self.trail_strength<MIN_TRAIL_STRENGTH:
             self.trail_strength=MIN_TRAIL_STRENGTH
 
@@ -214,7 +215,7 @@ class Particle:
     
     def update_position(self):
         
-        if self.trail_strength>0.999999:
+        if self.trail_strength>0.99:
             print(self.trail_strength)
             return
         self.x += self.dx
