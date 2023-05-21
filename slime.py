@@ -126,12 +126,21 @@ def sim_update():
     global particles
 
     # update particle position from dx,dy
-    for particle in particles:
-        particle.update_position()
+    for p in particles:
+        p.update_position()
+
+   # compute relative path length
+    L = []
+    for p in particles:
+        L.append(p.path_length()+0.001)
+    L = np.array(L)
+    L =  1-(L/np.sum(L))**4.
+    for idx,p in enumerate(particles):
+        p.trail_length = 1.0#L[idx]
 
     # update trails array
-    for particle in particles:
-        particle.update_past_positions(trail_data)
+    for p in particles:
+        p.update_past_positions(trail_data)
 
     # update dx, dy from trail data including trail attraction and boundary repulsion   
     cone_data = np.zeros((SCREEN_WIDTH, SCREEN_HEIGHT), dtype=np.float32)
@@ -140,10 +149,14 @@ def sim_update():
         cone_data[int(particle.x-CONE_LENGTH):int(particle.x+CONE_LENGTH), int(particle.y-CONE_LENGTH):int(particle.y+CONE_LENGTH)] += conem
 
     # reduce the trail over time
-    trail_data = np.maximum(trail_data - TRAIL_ATTRACTION/TRAIL_MAX_FRAMES, 0)
+    #trail_data = np.maximum(trail_data - TRAIL_ATTRACTION/TRAIL_MAX_FRAMES, 0)
+    trail_data = np.maximum(trail_data - 0.02, 0)
+
     # print(np.min(trail_data[np.nonzero(trail_data)]))
     # trail_data /= np.max(trail_data)
     # time.sleep(1/FPS)
+    # for p in particles:
+    #     print(p.path_length())
 
 # thread = threading.Thread(target=sim_update)
 
@@ -163,7 +176,7 @@ while running:
 
     if RESET_OLD == True:
         to_reset = []
-        if counter % 300 == 0:
+        if counter % 350 == 0:
             print('disabling detection for particles in city')
             diff = 0
             for particle in particles:

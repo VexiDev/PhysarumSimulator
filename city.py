@@ -25,6 +25,6 @@ class City:
             for j in range(SCREEN_HEIGHT):
                 distance = np.sqrt((i - self.x) ** 2 + (j - self.y) ** 2)
                 if distance < CITY_RADIUS:
-                    city_data[i, j] = 1 - distance / CITY_RADIUS
+                    city_data[i, j] = (1. - distance / CITY_RADIUS)
 
         return np.maximum(city_data,0)

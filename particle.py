@@ -38,6 +38,7 @@ class Particle:
         self.past_positions = np.full((1000, 2), fill_value=[self.x, self.y])
         self.target = [None, None]
         self.disable_detection = False
+        self.trail_length =0
         #self.trail_index = 0
         # self.trail_length = trail_max_frames
         self.trail_strength = TRAIL_ATTRACTION
@@ -56,6 +57,7 @@ class Particle:
         self.past_positions = np.full((1000, 2), fill_value=[self.x, self.y])
         self.target = [None, None]
         self.disable_detection = False
+        self.trail_length=0
         #self.trail_index = 0
         #self.trail_length = trail_max_frames
         self.trail_strength = TRAIL_ATTRACTION
@@ -73,9 +75,9 @@ class Particle:
         #      # We assume the fade value to be 1 for the newest position
         #     trail_data[int(x), int(y)] = TRAIL_ATTRACTION #self.trail_strength
 
-        val = self.trail_strength
+        val = self.trail_strength * self.trail_length
         # dv = self.trail_strength / (4*len(self.past_positions))
-        dv = 0.001
+        dv = 0.001 
         for pos in self.past_positions[::-1]:
            x,y = pos
            if 0 <= x < SCREEN_WIDTH and 0 <= y < SCREEN_HEIGHT:
@@ -87,6 +89,10 @@ class Particle:
 
         # Return the updated trail_data
         return trail_data
+
+    def path_length(self):
+        # Calculate the length of the path
+        return np.sum(np.linalg.norm(np.diff(self.past_positions, axis=0), axis=1))
 
     def angle_between_vectors(self, dx1, dy1, dx2, dy2):
         # Calculate the angle between two vectors
@@ -208,6 +214,9 @@ class Particle:
     
     def update_position(self):
         
+        if self.trail_strength>0.999999:
+            print(self.trail_strength)
+            return
         self.x += self.dx
         self.y += self.dy
     
