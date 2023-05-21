@@ -2,6 +2,9 @@
 
 Steps to run a path builder slime mold simulation:
 
+Ensure your on python 3.10 or greater:
+> python --version
+
 Clone repository:
 > git clone -b feat-origin-city https://github.com/VexiDev/PhysariumSimulator.git
 
