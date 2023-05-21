@@ -1,3 +1,3 @@
 # PhysariumSimulator
 
-use feat-origin-city branch for latest version.
+Switch to feat-origin-city branch for latest version and instructions.
