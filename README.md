@@ -1,5 +1,7 @@
 # PhysariumSimulator
 
+> This repository does not include a fully functional self-optimization algorithm but I may complete it in the future
+
 Steps to run a path builder slime mold simulation:
 
 Ensure your on python 3.10 or greater:
