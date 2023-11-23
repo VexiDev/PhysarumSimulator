@@ -1,6 +1,6 @@
 # PhysariumSimulator
 
-> This repository does not include a total self-optimization algorithm but I may update it in the future
+> This repository does not include a polished self-optimization algorithm but I may update it in the future
 
 Steps to run a path builder slime mold simulation:
 
