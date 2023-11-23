@@ -1,4 +1,4 @@
-# PhysariumSimulator
+# PhysarumSimulator
 
 > This repository does not include a polished self-optimization algorithm but I may update it in the future
 
@@ -8,7 +8,7 @@ Ensure your on python 3.10 or greater:
 > python --version
 
 Clone repository:
-> git clone -b feat-origin-city https://github.com/VexiDev/PhysariumSimulator.git
+> git clone -b feat-origin-city https://github.com/VexiDev/PhysarumSimulator.git
 
 Install required libraries:
 > pip install -r requirements.txt
